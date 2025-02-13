@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -14,10 +15,8 @@ import (
 
 // Zoom API Credentials
 const (
-	APIKey    = "ffy1aZUTQUGTgoEVsZ-iog"
-	APISecret = "ATQ43IZhrutiuJM5NypFIUWWDS6rFNLz"
-	BaseURL   = "https://api.zoom.us/v2"
-	UserID    = "adnin.rais31@gmail.com"
+	BaseURL = "https://api.zoom.us/v2"
+	UserID  = "adnin.rais31@gmail.com"
 )
 
 // Meeting struct
@@ -30,8 +29,12 @@ type ZoomMeeting struct {
 	Password  string `json:"password,omitempty"`
 }
 
+type RequestPayload struct {
+	Token string `json:"access_token"`
+}
+
 func getZoomToken() string {
-	clientID := "ffy1aZUTQUGTgoEVsZ-iog"
+	clientID := "lh9PDfiCSDy66gI4tIzpyg"
 	clientSecret := "ATQ43IZhrutiuJM5NypFIUWWDS6rFNLz"
 	accountID := "ffy1aZUTQUGTgoEVsZ-iog"
 
@@ -51,8 +54,24 @@ func getZoomToken() string {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	return string(body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+
+	// Parse JSON response
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return ""
+	}
+
+	// Return the access token
+	accessToken, ok := result["access_token"].(string)
+	if !ok {
+		return ""
+	}
+
+	return accessToken
 }
 
 // Create Meeting
